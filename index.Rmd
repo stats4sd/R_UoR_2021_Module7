@@ -25,6 +25,21 @@ x<-(-b+c(1,-1)*sqrt(b^2-4*a*c))/(2*a)
 
 return(x)
 }
+
+quad_solve2 <- function(a,b,c){
+
+  if(is.numeric(a)==FALSE | is.numeric(b)==FALSE | is.numeric(c)==FALSE){
+    stop("All inputs a, b and c must be numeric")
+  }
+  else{
+x<-(-b+c(1,-1)*sqrt(b^2-4*a*c))/(2*a)
+  }
+  
+
+return(x)
+}
+
+
 #sims<-data.frame(sim=1:500,estimate=NA)
 #set.seed(1)
 
@@ -773,7 +788,7 @@ The way to trigger an error message is to use the function `stop()`. Inside the 
 In this case we need all our inputs to be numeric, but there are lots of things they might be rather than numeric, we need to think about this in a slightly negative way. To trigger the error we need `a` to be non-numeric OR `b` to be non-numeric OR `c` to be non-numeric
 
 ```{r fun15, exercise =TRUE, warning=FALSE}
-quad_solve <- function(a,b,c){
+quad_solve2 <- function(a,b,c){
 
   if(is.numeric(a)==FALSE | is.numeric(b)==FALSE | is.numeric(c)==FALSE){
     stop("All inputs a, b and c must be numeric")
@@ -787,11 +802,20 @@ return(x)
 }
 
 
-quad_solve(a=100,b=10,c=-5)
-quad_solve(a="One hundred",b=10,c=-5)
+
 
 ```
-We can see this new function works exactly in the same way if we don't trigger an error. But if we do trigger that error we now have our lovely new message to help us interpret what has gone wrong.
+We can see this new function works exactly in the same way if we don't trigger an error:
+```{r qs2,exercise=TRUE}
+quad_solve2(a=100,b=10,c=-5)
+
+```
+But if we do trigger that error we now have our lovely new message to help us interpret what has gone wrong:
+```{r qs3,exercise=TRUE}
+quad_solve2(a="One hundred",b=10,c=-5)
+```
+
+
 
 ## Tidy iteration
 
