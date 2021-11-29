@@ -410,11 +410,11 @@ quantile(sims$estimate,c(0.025,0.975))
 
 ```
 
-In fact what we have just done is prove all of the underlying theory behind confidence intervals! When we calculate a 95% confidence interval from our data what we are saying is "if we repeated the data collection process 100 times we would expect the estimate to be within this range 95% of the time". In reality we can usually only collect data once - but we can resample from the census lots and lots of times!
+In fact what we have just done is to come up with a simulation based approach to a 95% confidence interval. When we calculate a 95% confidence interval from our data what we are saying is "if we repeated the data collection process 100 times we would expect the estimate to be within this range 95% of the time". In reality we can usually only collect data once - but we can resample from the census lots and lots of times!
 
 When we calculate a confidence interval for an estimated proportion we use the formula $p \pm z \times \sqrt{\frac{p(1-p)}{n}}$  (https://www.dummies.com/education/math/statistics/how-to-determine-the-confidence-interval-for-a-population-proportion/)
 
-For a 95% confidence interval `z` is the 97.5th percentile of the standard normal distribution; this is a case where we want to use the `qnorm` function we mentioned earlier. `qnorm(0.975)` will give us the value we want
+For a 95% confidence interval `z` is the 97.5th percentile of the standard normal distribution; this is a case where we want to use the `qnorm` function we mentioned earlier. `qnorm(0.975)` will give us the value we want.
 
 ```{r b5, exercise=TRUE}
 qnorm(0.975)
@@ -422,7 +422,7 @@ qnorm(0.975)
 
 If you ever hear a statistician say 'approximately two' it is a good chance it is this number (1.959964) that they are referring to!
 
-We can plug that in to the rest of that formula
+We can plug that in to the rest of that formula and see if the theoretical confidence interval matches the simulation 
 
 ```{r b6, exercise=TRUE}
 0.134+c(-1,1)*qnorm(0.975)*sqrt(0.134*0.866)/sqrt(500)
