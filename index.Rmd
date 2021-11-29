@@ -36,7 +36,7 @@ return(x)
 #sims$estimate[i]<-result$percent[1]     
 #}
 #write.csv(sims,"sims.csv",row.names = FALSE)
-census_data<-data.frame(born=c(rep("UK",48571345),rep("Outside of the UK",7505108)))
+census_data<-data.frame(born=sample(c(rep("UK",48571345),rep("Outside of the UK",7505108))))
 sims<-read.csv("sims.csv")
 
 ```
