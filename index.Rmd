@@ -588,7 +588,7 @@ I am using the %in% operator here - this can be an easy way of looking to see if
 
 ```
 
-```{r qqq-solution}
+```{r qqq2-solution}
 simulations<-data.frame(iteration=1:500,turns=NA)
 
 for(i in 1:500){
