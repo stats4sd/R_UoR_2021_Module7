@@ -228,6 +228,7 @@ One area that people often do not understand very well is the process of random 
 
 I have imported a dataset called `census_data` this contains data from the 2011 UK census about all 56 million people in the UK. Although just one variable - indicating if they were born in the UK, or born outside of the UK.
 
+I've limited the output to just 100 rows to prevent this all showing everywhere!
 
 ```{r c1, exercise=TRUE}
 census_data
@@ -384,7 +385,13 @@ sims %>%
   geom_histogram(bins=10)
 ```
 
-This time you should see a very similar looking distribution of values - but notice that the x axis will have shrunk considerably. All of our estimated values are in a much narrower range. Perhaps we want to look at the range in which 95% of our values lie? We could use the `quantile`  function and take a look at the 2.5th and 97.5th percentiles - so that the 'middle' 95% of the data will lie within this range.
+This time you should see a very similar looking distribution of values - but notice that the x axis will have shrunk considerably. 
+
+Also notice in the code we are using 500 in two different contexts - 500 iterations of samples of size 500. In the first line and in the `for` line we are referring to the number of iterations. In the `slice` line we are referring to the number of samples.
+
+All of our estimated values are in a much narrower range. Perhaps we want to look at the range in which 95% of our values lie? We could use the `quantile`  function and take a look at the 2.5th and 97.5th percentiles - so that the 'middle' 95% of the data will lie within this range.
+
+
 
 ```{r b4, exercise=TRUE}
 sims<-data.frame(sim=1:500,estimate=NA)
