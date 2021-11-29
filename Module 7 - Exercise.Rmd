@@ -1,0 +1,99 @@
+# Module 7 - Exercise 1
+
+#Load libraries
+
+Make sure you run the setup chunk to import the data and load the libraries for this session.
+
+```{r setup}
+library(dplyr)
+library(ggplot2)
+library(janitor)
+
+
+howell_18<-read.csv("howell_18.csv")
+
+carddeck<-read.csv("carddeck.csv")
+
+```
+
+
+In this exercise we are going to follow some exercises based on a subset of the dataset `howell` which is included in the `lgrdata` package. This has been exported to the file "howell_18.csv" to just contain the adults within the data.
+This file contains 473 observations of weight and height from adults aged 18 or over from the Xhosa ethnic group in South Africa. This contains sex, age (years), weight (kg) and height (cm).
+
+
+
+*Question 1a: Calculate the mean and standard deviation of the heights in the howell data set*
+
+```{r}
+
+  
+```
+*Question 1b: Produce a density plot of the distribution of height using `geom_density` to look at the distribution. It is a somewhat well known fact that height should follow a normal distribution - let's see if it applies to our data*
+
+```{r}
+
+```
+
+*Question 1c: I am not sure whether that looks like a normal distribution or not! One trick to see if something is clearly non-Normal is to randomly generate a few sets of data based on the mean, standard deviation and number of observations. If you can clearly 'spot the difference' between the randomly generated plots and your own plot then there is probably an issue!*
+
+*Using the mean, standard deviation question 1a - write some code which randomly generates 473 values from a normal distribution and then produces a density plot*
+
+		
+
+```{r}
+
+```
+
+*Run this code a few times, so that you've had a look at multiple plots from multiple simulations*.
+Does the plot from the 'real' data stand out as being a significant deviation from a normal distribution? Why do you think this is?*
+
+```{r}
+
+```
+
+*Question 2: Randomly select 100 rows from the howell_18 data set. Calculate the mean and standard deviation of the heights in these rows*
+
+```{r}
+
+```
+
+
+*Question 3a: Create a function that takes as as inputs "weight" and "height" and returns the Body MAss Index (BMI) category. BMI is equal to weight(kg) / height squared (m2). BMI of under 18.5 is classed as "Underweight", 18.5-24.9  is "Normal", 25-29.9 is "Overweight and 30+ is "Obese"*
+
+
+```{r}
+bmi_category<-function(weight,height){
+
+}
+
+
+
+
+```
+
+*Question 3b: Use this function on the howell_18 data. Then investigate if there is a significant difference in the BMI categories based on gender*
+
+```{r}
+
+  
+```
+
+##### For the final two questions we are using the `carddeck` data frame which contains a standard pack of 52 playing cards to help us look at a simulation problem.
+
+*Question 4a: Write some code to simulate a card game in which 5 cards are randomly dealt. Iterate this code 5000 times to estimate the proportion of games in which all 5 cards are of the same suit*
+Hint: Consider looking into the function `unique()`
+
+```{r}
+
+
+```
+
+*Question 4b: Turn this code into a function which allows the user to specify the number of cards dealt and the number of iterations the simulation will run. Include a custom error message if the user requests more than 13 cards dealt (since then it is impossible for them all to match)*
+```{r}
+
+
+
+```
+
+
+

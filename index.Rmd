@@ -1,0 +1,873 @@
+---
+title: "Generating Randomness & Programming"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+    df_print: default
+runtime: shiny_prerendered
+description: >
+  Sampling and Simulations in R.
+---
+
+
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(knitr)
+library(janitor)
+tutorial_options(exercise.timelimit = 20)
+
+quad_solve <- function(a,b,c){
+
+x<-(-b+c(1,-1)*sqrt(b^2-4*a*c))/(2*a)
+
+return(x)
+}
+#sims<-data.frame(sim=1:500,estimate=NA)
+#set.seed(1)
+
+#for(i in 1:500){
+#result<- census_data %>%
+#  slice(sample(1:nrow(census_data),100)) %>%
+#  tabyl(born) 
+
+#sims$estimate[i]<-result$percent[1]     
+#}
+#write.csv(sims,"sims.csv",row.names = FALSE)
+census_data<-data.frame(born=c(rep("UK",48571345),rep("Outside of the UK",7505108)))
+sims<-read.csv("sims.csv")
+
+```
+
+
+
+## Overview
+
+At the very basis of data analysis and statistics, lies the concepts of pattern and randomness. So far, we've mostly used R to detect patterns or relationships in data, using graphs, summary statistics, statistical tests or statistical modelling. 
+
+But we can also use R to **generate randomness**, which is essential for things like creating random samples, randomising treatments, doing simulation studies, or performing sampling or randomisation-based statistical analysis. 
+
+It is in this area where R as a 'programming language' for data analysis really can come into it's own versus any other choice of software. You have almost unlimited flexibility for specifying and generating particular simulations, lacking from point-and-click statistical software, and at the same time have the built in tools to analyse and visualise the results from these simulations, lacking from more conventional programming languages.
+
+In addition to looking for patterns or generating randomness, we can also use R to build new tools that will help us in our tasks. That is we can **program and create functions**. That's what we'll look at in the second part of this workbook.
+
+In the videos for this module I work through a case study of using R to conduct some simulations for a well known probability problem - and then show an example of why this approach, and R, is so flexible but making a few small tweaks to modify the problem to be one which would be 'unsolvable' through probability theory but can be solved pretty quickly using simulations.
+
+In the first part, I cover maybe the most important step of all - thinking about how to parameterise your problem. It is all good knowing how these functions work, but for them to be useful you need to be confident that you can translate them to the reality of your problem!
+
+![](https://youtu.be/B5b90PLw5AY)
+
+## Generating Randomness
+
+
+
+### Sampling
+
+
+The base-R function to generate a random sample from a list of values is `sample()`. It needs the list of values as the first argument, and the number of values to sample as the second argument. To sample 5 different random values between 1 and 10, we would write the following command:
+
+```{r sample_1, exercise =TRUE}
+sample(1:10, 5)
+```
+
+The second argument is optional though and if we omit it, R generates as many random values as there are elements in the list of values. That is, it just permutes the list of values indicated as the first argument.
+
+```{r sample_2, exercise =TRUE}
+sample(1:10)
+```
+
+By default `sample()` samples without replacement, so we get an error if we ask for more values than there is in our list
+
+```{r sample_3, exercise =TRUE}
+sample(1:10, 20)
+```
+
+But we can ask R to sample *with* replacement using the argument `replace=TRUE`:
+
+```{r sample_4, exercise =TRUE}
+sample(1:10, 20, replace=TRUE)
+```
+
+
+
+`sample()` can sample from any kind of values, not just numeric ones. For example, if we had two treatments that we wanted to allocate randomly to say, 20 individuals, we could do so with the following command:
+
+```{r sample_4b, exercise =TRUE}
+sample(c("Treatment 1", "Treatment 2"), 20, replace=TRUE)
+```
+
+And we can also assign probability weights to our list of values, so that some values get picked more often than others, using the argument `prob`. Here is how we'd ask R to randomly pick 50 values out of "control", "treatment 1" and "treatment 2", if we wanted the value "control" to get the same probability of being picked than the two treatments combined:
+
+```{r sample_5, exercise =TRUE}
+sample(c("Control", "Treatment 1", "Treatment 2"), 50, replace=TRUE, prob = c(0.5,0.25,0.25))
+```
+
+The values indicated for the prob argument don't have to add up to 1 though. They really can be any kind of weights rather than being strictly probability based. So the command below is equivalent to the previous one:
+```{r sample_6, exercise =TRUE}
+sample(c("Control", "Treatment 1", "Treatment 2"), 50, replace=TRUE, prob = c(2,1,1))
+```
+
+
+
+### Simulations
+
+We can also generate random numbers from theoretical distributions, which is useful to simulate data. The function to generate random numbers from a normal distribution is `rnorm()`. Its arguments are
+
+- **n**, the number of random values to generate  
+- **mean**, the mean of the normal distribution from which we are drawing numbers
+- **sd**, the standard deviation of this normal distribution 
+
+So to generate three random numbers coming from a normal distribution with mean 2 and standard deviation 0.5, we would write the following command:
+
+```{r rnorm, exercise =TRUE}
+rnorm(n=3, mean=2, sd=0.5)
+```
+
+Let's use `rnorm()` to simulate a dataframe with 100 observations of a normally distributed variables and then pipe this into a histogram
+
+```{r rnorm4, exercise =TRUE}
+randomData <- data.frame(normal_sim=rnorm(n=100, mean=0, sd=1))
+
+randomData %>%
+  ggplot(aes(x=normal_sim))+
+    geom_histogram()
+```
+
+Looks pretty normal - remember this is generated exactly from a normal distribution, and it will still look a little 'spiky' rather than a beautiful smooth curve. Keep that in mind when evaluating assumptions of normality with statistical methods!
+
+We can draw random number from other types of theoretical distributions. The most commonly used functions to generate random numbers are probably these ones:
+
+- `rnorm()` which samples from the Normal distribution  
+- `rbinom()` which samples from the Binomial distribution 
+- `rpois()` which samples from the Poisson distribution  
+- `runif()` which samples from the Uniform distribution  
+
+Note that the Uniform distribution corresponds to the situation where all the numbers in an interval have equal probability of being picked. So `runif()` is the function to use when we want to randomly pick a number between 0 and 1.
+
+```{r rnorm5, exercise =TRUE}
+randomData2 <- data.frame(uniform_sim=runif(n=100, min=0,max=100))
+
+randomData2 %>%
+  ggplot(aes(x=uniform_sim))+
+    geom_histogram()
+```
+
+If you feel you need some refresher on the concept of probability distributions, <a href="http://www.zstatistics.com/videos/#/distributions" target="_blank">here </a> is a pretty good series of videos.
+
+
+The first argument for all of these '**r**functions' is `n`, the number of random values to generate. The arguments that follow specify some eventual parameters for the distribution. For `rnorm()` it was the mean and the standard deviation, but for `runif()`, it is the minimum (min) and maximum (max). 
+
+And here are 6 random numbers picked from a binomial distribution with parameters size=10 and prob=0.5. Note that a Binomial distribution is the distribution of successes in a a sequence of independent coin-flip-like experiments. So effectively this code is asking R to simulate "How many times out of 10 would we see a coin land on heads" (size=10; prob=0.5), and then repeating this 6 times (n=6).
+```{r simu2, exercise =TRUE}
+rbinom(n=6, size=10, prob=0.5)
+```
+
+The help of R - that we access with `?` - is quite good to know what to write inside the brackets as all these functions, as they all work the same way, except for the parameters of the distribution.
+
+
+```{r simu3, exercise =TRUE}
+?rbinom
+```
+The help menu doesn't show nicely in the online workbook, so <a href="https://www.rdocumentation.org/packages/stats/versions/3.3/topics/Binomial" target="_blank">here </a> is the online version:
+
+
+You might be confused to see four functions in the help page for `rbinom()` though:
+
+- dbinom()  
+- pbinom()  
+- qbinom()  
+- rbinom()  
+
+
+
+That's because in general, R provides four functions for each theoretical distribution. Their names are identical except for the first letter. One is the density function of the distribution (`dxxx`), one gives cumulative probabilities (`pxxx`), one is the quantile function (`qxxx`) and one generates random numbers from the distribution (`rxxx`). In this workbook, we are only interested in generating random numbers, so we are focused on the 'rxxx' functions. But if you want to know more about the other functions, <a href="https://www.datascienceblog.net/post/basic-statistics/distributions/" target="_blank">here </a> is a good place to start.
+
+
+And here is the list of theoretical distribution functions available in base-R. The random generation functions are on the last column. 
+
+```{r echo=FALSE, out.width="80%", fig.align='center'}
+include_graphics("./images/dist.PNG")
+```
+
+
+
+
+
+
+### Reproducibility
+
+One thing that can sometimes be an issue when we use functions that generate randomness in a script is that each time we run the script, the generated values change. Therefore, if we pass on the script to someone else, they will not get the same exact results even though they are running the same script. We can fix this though, because the generation of randomness by computers is never truly random. It is based on some algorithm that take a "seed" number as input and then generates numbers based on this seed. This "seed" is usually based on the internal clock of your computer and so it changes all the time. But we can fix the seed manually using the function `set.seed()` by indicating an integer - the seed - inside the brackets.
+
+If you run the command below multiple times, you will get multiple different outputs
+
+```{r rep1, exercise =TRUE}
+sample(1:20, 5)
+rnorm(n=10)
+```
+
+But if you run the command below multiple times, you will always get the same output
+
+```{r rep2, exercise =TRUE}
+set.seed(34)
+sample(1:20, 5)
+rnorm(n=10)
+```
+
+
+To learn more about how programming languages like R can generate pseudorandom numbers, have a look at <a href="https://www.youtube.com/watch?v=C82JyCmtKWg" target="_blank">this nice video</a>.
+
+Also note that if ever you need true randomness for your work, the package `random` provides functions to access the true random number service of <a href="https://www.random.org/" target="_blank">random.org </a> that uses real atmospheric noise to generate random numbers.
+
+## Simulations
+
+Now that we know we can generate randomness, we can start coming up with some more interesting applications! 
+
+One area that people often do not understand very well is the process of random sampling and estimation. For example: "How can they be so sure that 74% of people say X? They only interviewed 500 people!". Looking at simulations we can actually prove the underlying sampling theory pretty nicely!
+
+I have imported a dataset called `census_data` this contains data from the 2011 UK census about all 56 million people in the UK. Although just one variable - indicating if they were born in the UK, or born outside of the UK.
+
+
+```{r c1, exercise=TRUE}
+census_data
+
+nrow(census_data)
+```
+
+Using the `tabyl` function we have learnt about in Module 5, we can look at the proportion of UK residents not born in the UK
+
+```{r c2, exercise=TRUE}
+census_data %>%
+  tabyl(born)
+```
+We find our answer - 13.4%.
+
+But did we need to speak to 56,076,453 people to find out that answer?
+
+What if we only had spoken to 100 people who were a random sample of the population? Would we have got the same result?
+
+Let's use the sample function to select 100 numbers at random from between 1 and `nrow(census_data)` (i.e. the number of rows in the data). 
+
+```{r c3, exercise=TRUE}
+sample(1:nrow(census_data),100)
+```
+
+We can then use `slice` to select only those randomly selected rows from the dataset.
+
+```{r c4, exercise=TRUE}
+random_selections<-sample(1:nrow(census_data),100)
+
+census_data %>%
+  slice(random_selections) %>%
+  tabyl(born)
+```
+You can press run a lot of times on the code chunk above, a different sample of 100 people will be drawn. And every time you are likely to see a number which is pretty close to the 'true' value of 13.3%, even with just 100 people sampled. You can experiment as well, by changing that 100 in the sample to a larger number and seeing what impact that makes on your simulation here.
+
+Pressing run a lot of times may be somewhat addictive, but it would be better if we could iterate this process lots of times and get R to store the results for us so we take a look at a proper run of simulations. Thankfully we can! So we we will come back to this example a little later on.
+
+
+
+## Iteration
+
+### The for loop
+
+Loops allow one to perform some task multiple times, without having to duplicate the command for the task. 
+
+There are a few types of loops that one can do in R. The most useful ones are the `for` and the `while` loops. Both have a similar syntax where we write the loop keyword first (`for` or `while`), followed by a description of the number of iterations inside regular round brackets `( )`, and then the task to perform inside curly brackets `{ }`.
+
+Let's make a `for` loop that prints out a random sample of 1 numbers between 1 and 56,076,453.
+
+We need to set the number of iterations inside the `for` function and then insert our command inside curly brackets (`sample(1:nrow(census_data),10)`).
+
+```{r for2, exercise =TRUE}
+for(i in 1:10){
+sample(1:nrow(census_data),1)
+}
+```
+
+
+`i in 1:10` is asking R to create an object `i` (we could have called it differently) and to give it the value 1, then 2, then 3,  and so on, till 10.
+
+The keyword `for` is then asking R to perform the task inside the curly brackets each time i is given a new value. Since there are 10 elements in 1:10, R will therefore sequentially assign 10 values to `i` and run our sampling process 10 times.
+
+
+You may be wondering why you are seeing no output! By default R does not show anything within a loop. We need to explicitly say what we want to print on the screen. Otherwise nothing will be printed. This is because often we might be running thousands of iterations, and we don't really want to have thousands of things printed into the window.
+
+If we do want to see our results we could use the `print` function:
+
+```{r  f4, exercise=TRUE}
+for(i in 1:10){
+  sample(1:nrow(census_data),1) %>%
+  print()
+}
+```
+But probably a better way to do this, rather than printing at every step, would be to store the results of our similations somewhere.
+
+We could do this by setting up a data frame outside the loop to store the results in. This data frame will have the same number of rows as I am planning to have iterations. I am going to explicitly create an `iteration` column in my data to reflect this. When I first set up the data I will create a column for samples to live in, `sample`, but set this to be missing `NA` at the start.
+
+Then as I move through the loop I will assign each value of sample in turn to be the result of a new sample.
+The easiest way to do this is to use the square brackets `[]` to make a subset based on row position. As i iterates through each value of 1:10, this will correspond to a new row in the data frame I have created. So `simulation_data$sample[i]` will replace the 1st value of `sample` in the first iteration, the 2nd value in the second iteration and so on.
+
+```{r f5, exercise=TRUE}
+simulation_data<-data.frame(iteration=1:10,sample=NA)
+
+for(i in 1:10){
+ simulation_data$sample[i]<-sample(1:nrow(census_data),1)
+}
+simulation_data
+
+
+```
+
+
+### Back to the census
+
+OK - let's now apply this to our main census example. Rather than looping just the random sample, what we really want to simulate is the result from calculating the percentage based from that random sample.
+
+Let's start our by making 500 iterations. In each iteration we will select 100 rows at random from the data.
+
+In order to get just the information that we need, the % of the UK population that is foreign born, I am going to store the table of percentages as a temporary object called `result`. This will be over-written in each iteration.
+
+Since I want to look at only the % of non-UK births the value I want to store from each loop is the first value of the percentage column - i.e. `result$percent[1]` 
+
+```{r  b1, exercise=TRUE}
+sims<-data.frame(sim=1:500,estimate=NA)
+
+for(i in 1:500){
+result<- census_data %>%
+  slice(sample(1:nrow(census_data),100)) %>%
+  tabyl(born) 
+
+sims$estimate[i]<-result$percent[1]     
+}
+
+```
+
+Remember that in the for loop we don't see any output! 
+So let's try that again, but this time lets pipe our results into a histogram, showing the distribution of values we obtained from making 500 different samples of 100 from the census data. I am also going to set the seed so that we are all looking at the same plot!
+
+```{r b2, exercise=TRUE}
+sims<-data.frame(sim=1:500,estimate=NA)
+set.seed(1)
+
+for(i in 1:500){
+result<- census_data %>%
+  slice(sample(1:nrow(census_data),100)) %>%
+  tabyl(born) 
+
+sims$estimate[i]<-result$percent[1]     
+}
+
+sims %>%
+ ggplot(aes(x=estimate))+
+  geom_histogram(bins=10)
+```
+
+You can see with just 100 interviews we already get pretty close to the 'real' value of around 13% most of the time. Most surveys will have far more than 100 respondents though! How about 500 respondents instead?
+
+
+```{r b3, exercise=TRUE}
+sims<-data.frame(sim=1:500,estimate=NA)
+set.seed(1)
+
+for(i in 1:500){
+result<- census_data %>%
+  slice(sample(1:nrow(census_data),500)) %>%
+  tabyl(born) 
+
+sims$estimate[i]<-result$percent[1]     
+}
+
+sims %>%
+ ggplot(aes(x=estimate))+
+  geom_histogram(bins=10)
+```
+
+This time you should see a very similar looking distribution of values - but notice that the x axis will have shrunk considerably. All of our estimated values are in a much narrower range. Perhaps we want to look at the range in which 95% of our values lie? We could use the `quantile`  function and take a look at the 2.5th and 97.5th percentiles - so that the 'middle' 95% of the data will lie within this range.
+
+```{r b4, exercise=TRUE}
+sims<-data.frame(sim=1:500,estimate=NA)
+set.seed(1)
+
+for(i in 1:500){
+result<- census_data %>%
+  slice(sample(1:nrow(census_data),500)) %>%
+  tabyl(born) 
+
+sims$estimate[i]<-result$percent[1]     
+}
+
+
+quantile(sims$estimate,c(0.025,0.975))
+
+```
+
+In fact what we have just done is prove all of the underlying theory behind confidence intervals! When we calculate a 95% confidence interval from our data what we are saying is "if we repeated the data collection process 100 times we would expect the estimate to be within this range 95% of the time". In reality we can usually only collect data once - but we can resample from the census lots and lots of times!
+
+When we calculate a confidence interval for an estimated proportion we use the formula $p \pm z \times \sqrt{\frac{p(1-p)}{n}}$  (https://www.dummies.com/education/math/statistics/how-to-determine-the-confidence-interval-for-a-population-proportion/)
+
+For a 95% confidence interval `z` is the 97.5th percentile of the standard normal distribution; this is a case where we want to use the `qnorm` function we mentioned earlier. `qnorm(0.975)` will give us the value we want
+
+```{r b5, exercise=TRUE}
+qnorm(0.975)
+```
+
+If you ever hear a statistician say 'approximately two' it is a good chance it is this number (1.959964) that they are referring to!
+
+We can plug that in to the rest of that formula
+
+```{r b6, exercise=TRUE}
+0.134+c(-1,1)*qnorm(0.975)*sqrt(0.134*0.866)/sqrt(500)
+```
+
+And we obtain our 95% confidence interval for an estimate of 13.4% from a sample of 500 people. We are pretty confident the 'real' estimate will come between 10.4% and 16.4% - or a margin of error of +-3%.
+
+This should look remarkably similar to the numbers you saw from running the `quantile()` function on the simulated data. It looks like the complicated maths underlying that mathematical formula all matches the results we obtained from simulations!
+
+*Exercise - modify the code to see what happens when you increase the size of the sample and/or increase the number of simulations*
+```{r b7,exercise=TRUE}
+sims<-data.frame(sim=1:500,estimate=NA)
+set.seed(1)
+
+for(i in 1:500){
+result<- census_data %>%
+  slice(sample(1:nrow(census_data),500)) %>%
+  tabyl(born) 
+
+sims$estimate[i]<-result$percent[1]     
+}
+
+
+quantile(sims$estimate,c(0.025,0.975))
+
+0.134+c(-1,1)*qnorm(0.975)*sqrt(0.134*0.866)/sqrt(500)
+
+```
+
+## While loops
+
+We could also iterate based on reaching a certain condition, rather than over a fixed number of iterations. For example lets imagine we are playing a game involving a dice. And I need a cumulative score of 21 or more from rolling the dice to 'win'. If I want to see how many turns it would take me I could set up a set of simulations using a while loop.
+
+Firstly I would set up my dice roll
+
+```{r while1,exercise=TRUE}
+sample(1:6,1)
+```
+ Pretty straightforward - i need one number selected from the range 1-6.
+ 
+Then I need to think about how I record my score. I will set up an object called score, which starts at 0. Then I will set my while loop - while that score is under 21 I stay in the loop. If the score is 21 or more I leave the loop. And inside the loop I am rolling the dice and adding the total to my score.
+
+```{r while2,exercise=TRUE}
+score<-0
+
+while(score<21){
+  score<-score+sample(1:6,1)
+}
+
+score
+```
+
+But what I want to know is how many turns it will take me! Not my final score. So I should also set up a counter variable, that also starts at 0, but we add one to on each turn.
+
+```{r while3,exercise=TRUE}
+score<-0
+counter<-0
+
+while(score<21){
+  score<-score+sample(1:6,1)
+  counter<-counter+1
+}
+
+counter
+```
+
+This now tells me how many dice rolls I needed to reach a score of 21.
+
+*Question - Using a for loop around this code - run 500 simulations of this process, and take a look at the distribution of the results*
+
+```{r qqq,exercise=TRUE}
+score<-0
+counter<-0
+
+while(score<21){
+  score<-score+sample(1:6,1)
+  counter<-counter+1
+}
+
+counter
+```
+
+```{r qqq-solution}
+simulations<-data.frame(iteration=1:500,turns=NA)
+
+for(i in 1:500){
+score<-0
+counter<-0
+
+while(score<21){
+  score<-score+sample(1:6,1)
+  counter<-counter+1
+}
+
+simulations$turns[i]<-counter
+}
+
+ggplot(simulations,aes(x=turns))+
+  geom_histogram()
+```
+
+
+
+### if/else
+
+
+Another fundamental type of commands in programming are `if/else` statements. It is used to ask R to perform different tasks depending on a condition. If else statements are commonly used inside loops to further adapt the task to each specific iteration. The structure is fairly similar to the one for the `for` loop. We start with the keyword `if`, then inside brackets we place a condition to check, then inside curly brackets we place the task to perform if the condition is verified. 
+
+Here is a first example:
+```{r if1, exercise =TRUE}
+a <- 3
+if(a<5){
+  print(a)
+}
+
+```
+We fix a equals 3. Since a is lower than 5, the condition inside the if brackets is true and R performs the task in the curly brackets, that is, it prints the value of a. If we change the value of a to 7 though, nothing is printed:
+
+```{r if2, exercise =TRUE}
+a <- 7
+if(a<5){
+  print(a)
+}
+
+```
+
+
+But we can then add an `else` keyword followed by curly brackets just after the closed curly bracket of the if statement to ask R to perform another task if the condition is not verified:
+
+```{r if3, exercise =TRUE}
+a <- 7
+if(a<5){
+  print(a)
+} else{
+  print(-a)
+}
+
+```
+
+
+Let's tweak our dice rolling game by adding an if/else statement inside. 
+
+I've decided to add an extra rule in my game - if I roll an odd number, then instead of adding the value of my roll towards my total of 21; I have to subtract value from my score
+
+
+```{r if4, exercise =TRUE, warning=FALSE}
+score<-0
+counter<-0
+
+while(score<21){
+  die<-sample(1:6,1)
+  
+  if(die%in%c(1,3,5)){
+    score<-score-die
+  }
+  else{
+  score<-score+die
+  }
+  counter<-counter+1
+}
+
+counter
+```
+
+I am using the %in% operator here - this can be an easy way of looking to see if a value is contained anywhere within a longer vector. It returns a TRUE or a FALSE - effectively it is a shortcut to writing `die==1 | die==3 | die==5`.
+
+**Exercise - update the for loop that you wrote in the previous section to account for this rule change. You should see the distribution of number of turns needed change somewhat**
+
+```{r qqq2,exercise=TRUE}
+
+```
+
+```{r qqq-solution}
+simulations<-data.frame(iteration=1:500,turns=NA)
+
+for(i in 1:500){
+score<-0
+counter<-0
+
+while(score<21){
+  die<-sample(1:6,1)
+  
+  if(die%in%c(1,3,5)){
+    score<-score-die
+  }
+  else{
+  score<-score+die
+  }
+  counter<-counter+1
+}
+
+simulations$turns[i]<-counter
+}
+
+ggplot(simulations,aes(x=turns))+
+  geom_histogram(bins=40)
+```
+
+
+You may also remember the `ifelse()` function, which seemed to do something similar. If/else statements and the `ifelse()` function are definitely related and sometimes we can use them interchangeably, but they have different roles. The if/else statements are faster and more flexible in the tasks you can place inside the curly brackets. In contrast, the advantage of the `ifelse()` function is that it works on vectors and as such, can check multiple conditions at the same time. It also looks cleaner in a script.
+
+
+
+## Creating functions
+
+![](https://youtu.be/ifjInVVy2NU)
+
+When we have a set of commands that solves a problem that we expect to face multiple times, it may be a good idea to create a function out of these commands. That way we can call this function - in the same way we used all the functions we've seen so far - instead of having the write the commands again. Functions are a great way to keep scripts clean and readable and allow for minor tweaks to be easily accounted for without heaps of copying and pasting.
+
+In the second part of the video I cover how to turn your code into a function, and also introduce a newer, more 'tidy' way of running iterations.
+
+But let's start with functions: We define a function using the function `function()` and by placing the commands for the function inside curly brackets:
+
+```{r fun1, exercise =TRUE}
+function(){
+  
+}
+```
+
+The output of the command above is a bit weird, but that's because we didn't give a name to our function. We do that using the usual assignment symbol `<-`
+```{r fun2, exercise =TRUE}
+myFunction <- function(){
+  
+}
+```
+
+and we can then use our function like any other function:
+```{r fun3, exercise =TRUE}
+myFunction <- function(){
+  
+}
+myFunction()
+```
+
+Yes for now our function doesn't do anything because there is nothing inside the brackets, so R returns NULL.
+
+We can make the function return something, with the function `return()`
+
+```{r fun4, exercise =TRUE}
+myFunction <- function(){
+  return(2)
+}
+myFunction()
+```
+Our function returns 2 each time we call it. What an awesome function!!!
+
+Note that in online workbooks, code windows are completely independent from each other, so whenever we are working within one window and want to use a function that is not part of the loaded libraries, we need to include the definition of the function in that window before we use the function. A bit annoying, but this is specific to these online workbooks. We don't have this issue when we work offline with RStudio.
+
+
+Usually, when we create a function, we need to give it some arguments for it to be useful. We indicate these arguments inside the round brackets of `function()`. Below we are telling R that the function `myFunction()` takes an argument called "a":
+
+```{r fun5, exercise =TRUE}
+myFunction <- function(a){
+}
+
+```
+
+Once an argument has been given to a function, it can be used inside the curly brackets. Here is a function that adds one
+```{r fun6, exercise =TRUE}
+addOne <- function(a){
+  return(a+1)
+}
+```
+
+Let's see if the function works:
+```{r fun7, exercise =TRUE}
+addOne <- function(a){
+  return(a+1)
+}
+addOne(12)
+```
+Yes, it works!!
+
+If we call the function without providing a value for the argument, we get an error:
+```{r fun8, exercise =TRUE}
+addOne <- function(a){
+  return(a+1)
+}
+addOne()
+```
+
+The error is telling us that *"a" is missing, with no default*. That's because We can provide a default value to our argument. With a default value, we don't get an error. R just use the default value if we don't provide one :
+
+```{r fun9, exercise =TRUE}
+addOne <- function(a=7){
+  return(a+1)
+}
+addOne()
+```
+
+Obviously, we can have more than one argument in a function. We simply list them all inside the brackets, separated by commas. Here is a first function that takes three arguments called "hours", "minutes" and "seconds", make a calculation using these arguments, and return the result.
+
+```{r fun10, exercise =TRUE}
+timeToSeconds <- function(hours, minutes){
+  result <- hours*60*60 + minutes*60
+  return(result)
+}
+timeToSeconds(2,30)
+```
+As you probably figured out, the calculation turns hours and minutes into seconds and add it all. So converted in seconds, 2 hour and 30 minutes is 9000 seconds. Youhou! So useful to know!
+
+
+Our arguments don't have to be numbers, they can be anything, including dataframe. We would need that to be able to use pipes with our function.
+
+Let's think about a more useful example. Remember in Module 1 when we wrote some code to solve the quadratic equation?
+
+
+```{r fun11, exercise =TRUE, warning=FALSE}
+a<-1
+b<--9
+c<-19
+
+x<-(-b+c(1,-1)*sqrt(b^2-4*a*c))/(2*a)
+x
+```
+
+We have already effectively structured this in a way which can be mapped into a function. The first three lines are setting our arguments - the inputs to the quadratic function.
+
+The next line is the body of the function - solving the equation for x. And the final line is returning the output.
+
+So if we wanted to solve the quadratic equation again, rather than copy-pasting the whole of the code we can turn the code into a function.
+
+
+```{r fun12, exercise =TRUE, warning=FALSE}
+quad_solve <- function(a,b,c){
+
+x<-(-b+c(1,-1)*sqrt(b^2-4*a*c))/(2*a)
+
+return(x)
+}
+
+quad_solve(a=1,b=-9,c=19)
+
+```
+It now couldn't be easier to solve the quadratic equation - let's try with completely different inputs.
+
+```{r fun13,exercise=TRUE}
+quad_solve(a=-98,b=4444444,c=0.001)
+```
+But what if we do something stupid?
+
+```{r fun14,exercise=TRUE}
+quad_solve(a="One hundred",b=10,c=-5)
+```
+As you have probably encountered by now - error messages are sometimes easy to understand, and sometimes not. Particularly if you are writing a function you intend to share with other people it is a good idea to try and build in some error checking and sensible error messages which might help other people.
+
+The way to trigger an error message is to use the function `stop()`. Inside the brackets you can write a custom error message. You can trigger when these errors appear by using `if` and `else` so that if the conditions for an error (e.g. the inputs not being numeric) are met then the function returns this custom error rather than trying to force it to solve the equation.
+In this case we need all our inputs to be numeric, but there are lots of things they might be rather than numeric, we need to think about this in a slightly negative way. To trigger the error we need `a` to be non-numeric OR `b` to be non-numeric OR `c` to be non-numeric
+
+```{r fun15, exercise =TRUE, warning=FALSE}
+quad_solve <- function(a,b,c){
+
+  if(is.numeric(a)==FALSE | is.numeric(b)==FALSE | is.numeric(c)==FALSE){
+    stop("All inputs a, b and c must be numeric")
+  }
+  else{
+x<-(-b+c(1,-1)*sqrt(b^2-4*a*c))/(2*a)
+  }
+  
+
+return(x)
+}
+
+
+quad_solve(a=100,b=10,c=-5)
+quad_solve(a="One hundred",b=10,c=-5)
+
+```
+We can see this new function works exactly in the same way if we don't trigger an error. But if we do trigger that error we now have our lovely new message to help us interpret what has gone wrong.
+
+## Tidy iteration
+
+One thing you may have noticed with the `for` and `while` loops is that they don't particularly look very "tidy". Throughout this course we have been encouraging use of `tidyverse` R packages and programming using pipes. The `for` and `while` syntax is very different from this - but they are not the only way of iterating in R. 
+
+The `map` function is increasingly used to do the same thing, but in a tidier fashion and one which stores the output in a much more intuitive way. `map` comes from the `purrr` library, which is also part of the `tidyverse`. You saw an example of using this in the video case study.
+
+Let's take a look at another example using one the commands we wrote earlier:
+```{r ti1, exercise=TRUE}
+simulation_data<-data.frame(iteration=1:10,sample=NA)
+
+for(i in 1:10){
+ simulation_data$sample[i]<-sample(1:nrow(census_data),1)
+}
+simulation_data
+```
+
+This could be re-written using map as follows in much fewer lines of code.
+
+```{r ti2, exercise=TRUE}
+map_df(1:10,
+       ~data.frame(iteration=.,sample=sample(1:nrow(census_data),1))
+       )
+```
+`map_df` rather than `map` tells the function to return a data frame. If we just used `map` the output would be a `list` which is somewhat less friendly to work with.
+
+Within `map_df` the first argument is the sequence over which we want to iterate over. This is equivalent to what we wrote in our `for()` statement previously.
+
+The second argument defines what we want to iterate - we use a tilda `~` followed by the code we want to be iterated. Instead of referring to `i` we refer to `.` to show the inherited value from the sequence. 
+
+In `map` we explicitly always see the output so this will not require the same set up that we had to make before of creating the empty dataframe. `map` automatically binds together the output for us. 
+
+This makes it a little easier to work with, and now makes it much more compatible with pipes:
+
+```{r}
+1:10 %>%
+map_df(~data.frame(iteration=.,sample=sample(1:nrow(census_data),1))
+       )
+```
+
+
+`map` can get a little confusing when you have a lot of steps inside your iteration. But this would encourage you to turn that code into a function, with that function then being used inside `map` instead of the long winded piece of code. 
+
+If this sort of programming is something you are interested in exploring more then I would strongly recommend the book "Advanced R" by Hadley Wickham: https://adv-r.hadley.nz/index.html
+
+For many R users, particularly those not needing to code new methods or run simulations, this sort of programming may be not be as useful - but for others it will be essential!
+
+## Appendix:  Useful reference links  
+
+
+
+
+Using probability distributions in R - Data Science Blog: <a href="https://www.datascienceblog.net/post/basic-statistics/distributions/" target="_blank">https://www.datascienceblog.net/post/basic-statistics/distributions/ </a>
+
+How to Generate Pseudorandom Numbers, Infinite Series <a href="https://www.youtube.com/watch?v=C82JyCmtKWg" target="_blank">https://www.youtube.com/watch?v=C82JyCmtKWg </a>
+
+Probability distribution series of video from the Z Statistics website: <a href="http://www.zstatistics.com/videos/#/distributions" target="_blank">http://www.zstatistics.com/videos/#/distributions </a>
+
+
+David Robinson's youtube playlist of Riddler Puzzles solved via simulations in R: <a href="https://www.youtube.com/playlist?list=PL19ev-r1GBwl4eZGfMc6YJIYFSx8YlzBY" target="_blank">https://www.youtube.com/playlist?list=PL19ev-r1GBwl4eZGfMc6YJIYFSx8YlzBY </a>
+
+
+The CRAN: <a href="https://cran.r-project.org/" target="_blank">https://cran.r-project.org/ </a>
+
+Bioconductor: <a href="https://www.bioconductor.org/" target="_blank">https://www.bioconductor.org/ </a>
+
+Github: <a href="https://github.com/" target="_blank">https://github.com/ </a>
+
+The tidyverse website: <a href="https://www.tidyverse.org/" target="_blank">https://www.tidyverse.org/   </a> 
+
+Garrett Grolemund's list of recommanded packages: <a href="https://support.rstudio.com/hc/en-us/articles/201057987-Quick-list-of-useful-R-packages" target="_blank">https://support.rstudio.com/hc/en-us/articles/201057987-Quick-list-of-useful-R-packages</a> 
+
+CRAN Task Views: <a href="https://cran.r-project.org/web/views/" target="_blank">https://cran.r-project.org/web/views/ </a>
+
+METACRAN website: <a href="https://www.r-pkg.org/" target="_blank">https://www.r-pkg.org/ </a>
+
+RDocumentation website: <a href="https://www.rdocumentation.org/" target="_blank">https://www.rdocumentation.org/ </a>
+
+
+RSeek: <a href="https://rseek.org/" target="_blank">https://rseek.org/ </a>
+
+
+Also have a look at <a href="https://www.youtube.com/channel/UCeiiqmVK07qhY-wvg3IZiZQ" target="_blank">David Robertson's Youtube channel</a>. He has a great <a href="https://www.youtube.com/watch?v=nmS3UZSWYRo&list=PL19ev-r1GBwl4eZGfMc6YJIYFSx8YlzBY" target="_blank">playlist</a> of videos where he solves Puzzles through simulations:
+
+
+
