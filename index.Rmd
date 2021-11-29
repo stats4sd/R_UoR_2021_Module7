@@ -18,7 +18,7 @@ library(tidyverse)
 library(knitr)
 library(janitor)
 tutorial_options(exercise.timelimit = 20)
-
+options(max.print=200)
 quad_solve <- function(a,b,c){
 
 x<-(-b+c(1,-1)*sqrt(b^2-4*a*c))/(2*a)
