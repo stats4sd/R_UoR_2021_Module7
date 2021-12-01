@@ -243,7 +243,7 @@ One area that people often do not understand very well is the process of random 
 
 I have imported a dataset called `census_data` this contains data from the 2011 UK census about all 56 million people in the UK. Although just one variable - indicating if they were born in the UK, or born outside of the UK.
 
-I've limited the output to just 100 rows to prevent this all showing everywhere!
+I've limited the output to just 200 rows to prevent this all showing everywhere!
 
 ```{r c1, exercise=TRUE}
 census_data
